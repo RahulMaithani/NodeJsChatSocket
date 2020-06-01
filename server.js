@@ -1,3 +1,4 @@
+require('dotenv').config({path: __dirname + '/.env'})
 var express = require('express');
 var bodyParser = require('body-parser')
 var app = express();
@@ -13,6 +14,8 @@ app.use(bodyParser.urlencoded({limit: "50mbs", extended: true, parameterLimit:50
 
 require('./routes/UserRoute.js')(app);
 require('./routes/MessageRoute.js')(app);
+
+const port = process.env.PORT || 3000;
 
 var dbUrl = 'mongodb+srv://rahul2:test123@cluster0-81syp.mongodb.net/test?retryWrites=true&w=majority'
 
@@ -52,6 +55,6 @@ mongoose.connect(dbUrl,{useUnifiedTopology: true, useNewUrlParser: true, useCrea
 })
 
 //server connection
-var server = http.listen(3000, () => {
+var server = http.listen(port, () => {
   console.log('server is running on port', server.address().port);
 });
