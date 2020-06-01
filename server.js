@@ -17,8 +17,6 @@ require('./routes/MessageRoute.js')(app);
 
 const port = process.env.PORT || 3000;
 
-var dbUrl = 'mongodb+srv://rahul2:test123@cluster0-81syp.mongodb.net/test?retryWrites=true&w=majority'
-
 // socket connection
 io.on('connection', (socket) => {
   console.log('a user is connected')
@@ -50,7 +48,7 @@ io.on('connection', (socket) => {
 });
 
 // database connection
-mongoose.connect(dbUrl,{useUnifiedTopology: true, useNewUrlParser: true, useCreateIndex: true } ,(err) => {
+mongoose.connect(process.env.MONGO_URI,{useUnifiedTopology: true, useNewUrlParser: true, useCreateIndex: true } ,(err) => {
   console.log('mongodb connected',err);
 })
 
