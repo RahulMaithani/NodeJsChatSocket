@@ -3,10 +3,9 @@ const Message = require('../models/MessageModel')
 exports.getMessages = async (req, res) => {
   let fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
   console.log(fullUrl);
-  let senderId = req.query.senderId;
-  let receiverId = req.query.receiverId;
+  var id = req.params.id; // $_GET["id"]
   try {
-    Message.find({$or:[ {'senderId':senderId}, {'senderId':receiverId}, {'receiverId':receiverId} ]},(err, messages)=> {
+    Message.find({chatId: id},(err, messages)=> {
       res.send(messages);
     })
 
@@ -53,17 +52,39 @@ exports.createMessage = async (req, res) => {
 
 };
 
-exports.markReceived = async (req, res) => {
+exports.markReceived = async (req, res, io) => {
   let fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
   console.log(fullUrl);
   try {
-    const receiverId = req.body.receiverId
+    const chatId = req.body.chatId
     const senderId = req.body.senderId
-    const condition = { $or:[ { senderId: senderId }, { receiverId: receiverId }] };
+    const condition = { $and :[{'chatId' : chatId}, { 'status': { $ne: 'read' }}, { 'senderId': { $ne: senderId }}] }
+    console.log('condition:::', condition);
 
     const posts = await Message.updateMany(condition, { status: "received" }, { multi: true })
     .then((users) => {
-      io.emit('message', {"senderId":senderId,"receiverId":receiverId,"status":"received"});
+      console.log({"chatId":chatId,"status":"received"});
+      io.sockets.emit('markReceived', {"chatId":req.body.chatId,"deliveryStatus":"received"});
+      res.sendStatus(200);
+    });
+ }
+ catch (error){
+   res.sendStatus(500);
+   return console.log('error',error);
+ }
+};
+
+exports.markRead = async (req, res, io) => {
+  let fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+  console.log(fullUrl);
+  try {
+    const chatId = req.body.chatId
+    const condition = { 'chatId': chatId };
+
+    const posts = await Message.updateMany(condition, { status: "read" }, { multi: true })
+    .then((users) => {
+      console.log( {"chatId":req.body.chatId, "deliveryStatus":"read"});
+      io.sockets.emit('markReceived', {"chatId":req.body.chatId, "deliveryStatus":"read"});
       res.sendStatus(200);
     });
  }

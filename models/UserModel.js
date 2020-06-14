@@ -17,7 +17,17 @@ const userSchema = new mongoose.Schema({
     minlength: 4,
     maxlength: 150,
 
-  }
+  },
+  chatId: {
+    type: String,
+  },
+  isOnline: {
+    type: Boolean,
+    default: false,
+},
+authorizationToken: {
+  type: String,
+}
 });
 
 module.exports = mongoose.model("User", userSchema);

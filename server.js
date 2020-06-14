@@ -3,56 +3,37 @@ var express = require('express');
 var bodyParser = require('body-parser')
 var app = express();
 var http = require('http').Server(app);
-var io = require('socket.io')(http);
-var mongoose = require('mongoose');
-const User = require('./models/UserModel')
-const Message = require('./models/MessageModel')
+var morgan = require('morgan');
+
+//authorization
+var jwt = require('jsonwebtoken');
+var auth = require('./config/Auth');
+//database
+const InitiateMongoServer = require("./config/db");
 
 app.use(express.static(__dirname));
 app.use(bodyParser.json({limit: "50mb"}));
+// initialize body-parser to parse incoming parameters requests to req.body
 app.use(bodyParser.urlencoded({limit: "50mbs", extended: true, parameterLimit:50000}));
 
+//mongo DB connection
+InitiateMongoServer();
+
+// set morgan to log info about our requests for development use.
+app.use(morgan('dev'));
+
+//socket
+var io = require('socket.io')(http);
+var socket = require('./config/socket');
+socket.listen(io)
+
+//routes
+require('./routes/MessageRoute.js')(app, io);
 require('./routes/UserRoute.js')(app);
-require('./routes/MessageRoute.js')(app);
 
-const port = process.env.PORT || 3000;
-
-// socket connection
-io.on('connection', (socket) => {
-  console.log('a user is connected')
-  socket.on('message', async (data) => {
-    console.log('message:: ', data)
-
-    try{
-      var message = new Message(data);
-
-      var savedMessage = await message.save()
-        console.log('saved');
-
-      var censored = await Message.findOne({message:'badword'});
-        if(censored)
-          await Message.remove({_id: censored.id})
-        else
-          io.emit('message', savedMessage);
-    }
-    catch (error){
-      return console.log('error',error);
-    }
-    finally{
-      console.log('Message Posted')
-    }
-  });
-  socket.on('disconnect', () => {
-    console.log('a user is disconnected')
-   });
-});
-
-// database connection
-mongoose.connect(process.env.MONGO_URI,{useUnifiedTopology: true, useNewUrlParser: true, useCreateIndex: true } ,(err) => {
-  console.log('mongodb connected',err);
-})
 
 //server connection
+const port = process.env.PORT || 3001;
 var server = http.listen(port, () => {
   console.log('server is running on port', server.address().port);
 });

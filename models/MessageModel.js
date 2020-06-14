@@ -1,6 +1,14 @@
 const mongoose = require('mongoose')
+require('mongoose-double')(mongoose);
+var SchemaTypes = mongoose.Schema.Types;
 
 const messageSchema = new mongoose.Schema({
+  chatId: {
+    type: String,
+    required: "chatId is required",
+    minlength: 4,
+    maclength: 150,
+  },
   senderId: {
     type: String,
     required: "senderId is required",
@@ -23,7 +31,6 @@ const messageSchema = new mongoose.Schema({
   },
   message: {
     type: String,
-    required: "message is required",
   },
   status: {
     type: String,
@@ -32,8 +39,17 @@ const messageSchema = new mongoose.Schema({
     maxlength: 150,
 
   },
+  imageUrl: {
+    type: String,
+  },
   createdAt: {
     type: Date,
+  },
+  latitude: {
+    type: SchemaTypes.Double,
+  },
+  longitude: {
+    type: SchemaTypes.Double,
   },
 });
 
